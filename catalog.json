@@ -11,3 +11,14 @@
     }
   ]
 }
+
+
+{
+  "id": "voice-chat",
+  "name": "Voice Chat",
+  "version": "1.0.0",
+  "author": "Foxi005305",
+  "desc": "",
+  "url": "",
+  "hash": "1122be0296bc866590d1763afacfb424f61fe6cc61ff62b1877c8750bef2596f"
+}
