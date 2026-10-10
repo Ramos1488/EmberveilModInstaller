@@ -1,1 +1,83 @@
+name: Update catalog
 
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mods/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build catalog.json
+        env:
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          cat > build-catalog.js <<'EOF'
+          const fs = require('fs');
+          const crypto = require('crypto');
+
+          const repo = process.env.REPO, sha = process.env.SHA;
+          const MAX = 200 * 1024;
+          let old = { mods: [] };
+          try { old = JSON.parse(fs.readFileSync('catalog.json', 'utf8')); } catch (e) {}
+          const oldById = Object.fromEntries((old.mods || []).map(m => [m.id, m]));
+
+          const files = fs.existsSync('mods')
+            ? fs.readdirSync('mods').filter(f => /^[a-z0-9-]+\.js$/i.test(f)).sort()
+            : [];
+          const mods = [];
+          for (const f of files) {
+            let code = fs.readFileSync('mods/' + f, 'utf8').replace(/^\uFEFF/, '');
+            if (Buffer.byteLength(code) > MAX) { console.error('Пропущен (>200 КБ): ' + f); continue; }
+            const head = {};
+            for (const m of code.matchAll(/^\/\/\s*@(\w+)\s+(.+)$/gm)) head[m[1].toLowerCase()] = m[2].trim();
+            const id = f.replace(/\.js$/i, '');
+            const hash = crypto.createHash('sha256').update(code, 'utf8').digest('hex');
+            const prev = oldById[id];
+            const url = (prev && prev.hash === hash)
+              ? prev.url
+              : `https://raw.githubusercontent.com/${repo}/${sha}/mods/${f}`;
+            mods.push({
+              id,
+              name: head.name || id,
+              version: head.version || '1.0',
+              author: head.author || 'аноним',
+              desc: (head.description || '').slice(0, 300),
+              url,
+              hash
+            });
+          }
+          fs.writeFileSync('catalog.json', JSON.stringify({ mods }, null, 2) + '\n');
+          console.log('Модов в каталоге: ' + mods.length);
+          EOF
+          node build-catalog.js
+          rm build-catalog.js
+
+      - name: Commit catalog.json
+        run: |
+          if git diff --quiet -- catalog.json; then
+            echo "Без изменений"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add catalog.json
+          git commit -m "chore: update catalog.json"
+          git push
