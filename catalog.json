@@ -10,6 +10,15 @@
       "hash": "343418119f9c58245a08c271cebd21cb7d2574130d29e4655c061a2a2b3bc9b5"
     },
     {
+      "id": "EmberveilVisuals",
+      "name": "EmberveilVisuals",
+      "version": "1.0",
+      "author": "Foxi005305",
+      "desc": "Цветокоррекция, зум, след и аура игрока, режим скриншота (F7 — меню, H — скрыть интерфейс)",
+      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/467c2136984f72977e236a82e894b59b18f0dd96/mods/EmberveilVisuals.js",
+      "hash": "4bd4ed5668628a9e12227279f96e93ba6bdf5643065f27e85e4df340cfbf010e"
+    },
+    {
       "id": "VoiceChat",
       "name": "Voice Chat",
       "version": "1.0",
