@@ -12,11 +12,11 @@
     {
       "id": "VoiceChat",
       "name": "Voice Chat",
-      "version": "1.0.0",
+      "version": "1.0",
       "author": "Foxi005305",
-      "desc": "Голосовой чат с Push-to-Talk для игры Emberveil",
-      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModInstaller/0780f11763c98c3426290dad2da97b38dec4f3f0/mods/VoiceChat.js",
-      "hash": "d51401736544b5f8bf8386f4671fa5e1c983249152c8f5190538ab2d5340d31b"
+      "desc": "Голосовой чат по близости для онлайн-режима (WebRTC, G — говорить)",
+      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/b8cd77c3f9b20ebb15b0a410768b4ace097c8909/mods/VoiceChat.js",
+      "hash": "c6d8083371adbe89cae9d59a0aef5af55887b1e1baa6109cc300778e7f9f5e15"
     }
   ]
 }
