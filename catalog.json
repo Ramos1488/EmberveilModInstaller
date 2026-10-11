@@ -17,15 +17,6 @@
       "desc": "Голосовой чат по близости для онлайн-режима (WebRTC, G — говорить)",
       "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/b8cd77c3f9b20ebb15b0a410768b4ace097c8909/mods/VoiceChat.js",
       "hash": "c6d8083371adbe89cae9d59a0aef5af55887b1e1baa6109cc300778e7f9f5e15"
-    },
-    {
-      "id": "emberveilvisuals",
-      "name": "Visuals",
-      "version": "1.0",
-      "author": "Foxi005305",
-      "desc": "Цветокоррекция, зум, след и аура игрока, режим скриншота (F7 — меню, H — скрыть интерфейс)",
-      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/6bf70dce10e833f162527b0e642ba52d150c2ef5/mods/emberveilvisuals.js",
-      "hash": "4be457bff35dce0ae9f2c26ab71231cb789345e0dbd7e7a0659436994dfbb7d5"
     }
   ]
 }
