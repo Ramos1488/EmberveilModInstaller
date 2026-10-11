@@ -12,11 +12,11 @@
     {
       "id": "EmberveilVisuals",
       "name": "EmberveilVisuals",
-      "version": "1.0",
+      "version": "2.0",
       "author": "Foxi005305",
-      "desc": "Цветокоррекция, зум, след и аура игрока, режим скриншота (F7 — меню, H — скрыть интерфейс)",
-      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/467c2136984f72977e236a82e894b59b18f0dd96/mods/EmberveilVisuals.js",
-      "hash": "4bd4ed5668628a9e12227279f96e93ba6bdf5643065f27e85e4df340cfbf010e"
+      "desc": "Градиентные ауры и следы, эффекты смерти (луч, молния, лазер), килл-фид с причиной, бинды, новое меню (F7)",
+      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/80c3f3c7c459bd79af78d6c06404400a8d3c7546/mods/EmberveilVisuals.js",
+      "hash": "ec42435be14ec9a5153901f3a8ba04bc62a42a8994f2a7aa084c0b0ae0baa61b"
     },
     {
       "id": "VoiceChat",
