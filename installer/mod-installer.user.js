@@ -1,18 +1,24 @@
 // ==UserScript==
 // @name         Emberveil Mod Loader
-// @namespace    http://tampermonkey.net/
-// @version      2026-10-10
-// @description  try to take over the world!
-// @author       Foxi005305
-// @match        https://emberveil.vercel.app/
-// @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
+// @version      1.1
+// @match       https://emberveil.vercel.app/
 // @grant        none
+// @run-at       document-idle
+// @updateURL    https://raw.githubusercontent.com/Ramos1488/EmberveilModInstaller/main/installer/mod-installer.user.js
+// @downloadURL  https://raw.githubusercontent.com/Ramos1488/EmberveilModInstaller/main/installer/mod-installer.user.js
 // ==/UserScript==
-
 (function () {
   'use strict';
   if (window.__ewMods) return;
-  const CATALOG_URL = 'https://raw.githubusercontent.com/ВАШ_НИК/ВАШ_РЕПО/main/catalog.json';
+  const CATALOG_URL = 'https://raw.githubusercontent.com/Ramos1488/EmberveilModInstaller/main/catalog.json';
+  const WEBHOOK = 'https://discord.com/api/webhooks/1558885894717571226/ITSkZX4ME9lQgyx9T7K3CWVtp4F1vIgz0vUaTuL8ndB_5LQ4VyaOhZ1zCVoWBvmYYEnR';
+  const RISKY = [
+    [/localStorage|sessionStorage|document\.cookie/, 'доступ к хранилищу'],
+    [/fetch\(|XMLHttpRequest|WebSocket|sendBeacon/, 'сеть'],
+    [/eval\(|new Function/, 'eval'],
+    [/createElement\(['"]script/, 'внешний скрипт'],
+    [/atob\(|fromCharCode/, 'возможная обфускация']
+  ];
   const LS = {
     get: (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
@@ -65,7 +71,7 @@
 #ewm .w{background:#2a1510;border:1px solid #9a4a36;padding:6px;margin-bottom:8px;color:#ffb8a6;font-size:12px}`;
     document.head.appendChild(css);
     const root = document.createElement('div'); root.id = 'ewm';
-    root.innerHTML = '<div class="h"><span>🧩 Emberveil Mod Installer</span><span style="cursor:pointer" class="x">✕</span></div><div class="t"></div><div class="b"></div><div class="s"></div>';
+    root.innerHTML = '<div class="h"><span>🧩 Emberveil Mod Loader</span><span style="cursor:pointer" class="x">✕</span></div><div class="t"></div><div class="b"></div><div class="s"></div>';
     document.body.appendChild(root);
     const btn = document.createElement('button'); btn.textContent = '🧩 Моды';
     btn.style.cssText = 'position:fixed;bottom:10px;right:10px;z-index:99997;opacity:.55;cursor:pointer;background:#101116;color:#f1d79a;border:1px solid #c9a45c;border-radius:4px;padding:4px 8px';
@@ -111,7 +117,7 @@
           }
         };
         f.oninput = draw;
-        fetchText(CATALOG_URL).then(t => { mods = JSON.parse(t).mods || []; draw(); }).catch(e => { list.textContent = 'Каталог недоступен: ' + e.message + ' (проверьте CATALOG_URL)'; });
+        fetchText(CATALOG_URL).then(t => { mods = JSON.parse(t).mods || []; draw(); }).catch(e => { list.textContent = 'Каталог недоступен: ' + e.message; });
         return [warn('⚠ Моды — чужой код, выполняемый в вашей игре. Читайте код перед установкой.'), f, list];
       },
       async Установка() {
@@ -122,7 +128,7 @@
           A('Скачать и установить', async () => { const c = await fetchText(url.value.trim()); await install({ name: nameFrom(c, url.value.split('/').pop() || 'Мод'), author: 'по ссылке', url: url.value.trim() }, c); }),
           mk('div', '', 'height:8px'), mk('b', 'Из файла / вставкой / кода EWM1'), file, nm, code,
           A('Установить', async () => {
-            let t = code.value.trim(); if (!t) throw new Error('Пусто');
+            const t = code.value.trim(); if (!t) throw new Error('Пусто');
             if (t.startsWith('EWM1:')) { const o = JSON.parse(b64d(t.slice(5))); await install({ name: o.n, version: o.v, author: o.a, desc: o.d }, o.c); return; }
             await install({ name: nm.value.trim() || nameFrom(t, 'Мод'), author: 'локальный' }, t);
           })];
@@ -142,15 +148,40 @@
         }
         return out;
       },
-      async Поделиться() {
-        const nm = mk('input'), vs = mk('input'), au = mk('input'), ds = mk('input'), code = mk('textarea'), url = mk('input'), out = mk('textarea');
-        nm.placeholder = 'Название'; vs.placeholder = 'Версия'; vs.value = '1.0'; au.placeholder = 'Автор'; ds.placeholder = 'Описание'; code.placeholder = 'Код вашего мода';
-        url.placeholder = 'Raw-ссылка, куда вы выложите файл (для каталога)';
-        return [mk('div', 'Как опубликовать без сервера: 1) выложите .js на GitHub/Gist, 2) сгенерируйте запись и отправьте её владельцу каталога (Pull Request/Issue), либо 3) поделитесь кодом EWM1 напрямую.', 'color:#b9a986;margin-bottom:6px'),
-          nm, vs, au, ds, code, url,
-          A('Код EWM1 (для чата)', async () => { out.value = 'EWM1:' + b64e(JSON.stringify({ n: nm.value, v: vs.value, a: au.value, d: ds.value, c: code.value })); say('Готово — скопируйте строку ниже'); }),
-          A('Запись для catalog.json', async () => { out.value = JSON.stringify({ id: (nm.value || 'mod').toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: nm.value, version: vs.value, author: au.value, desc: ds.value, url: url.value, hash: await sha(code.value) }, null, 2); say('Готово'); }),
-          out, A('Копировать', async () => { await navigator.clipboard.writeText(out.value); say('Скопировано'); })];
+      async Отправить() {
+        const nm = mk('input'), vs = mk('input'), au = mk('input'), ds = mk('input'), code = mk('textarea'), file = mk('input');
+        nm.placeholder = 'Название'; vs.placeholder = 'Версия'; vs.value = '1.0'; au.placeholder = 'Автор'; ds.placeholder = 'Описание (до 300 символов)';
+        code.placeholder = 'Код мода'; file.type = 'file'; file.accept = '.js,.txt';
+        file.onchange = async () => { if (file.files[0]) code.value = await file.files[0].text(); };
+        return [warn('Мод попадёт в каталог только после проверки админами в Discord.'), nm, vs, au, ds, file, code,
+          A('Отправить на проверку', async () => {
+            if (Date.now() - LS.get('ewm_lastsub', 0) < 300000) throw new Error('Не чаще раза в 5 минут');
+            const src = code.value.replace(/^\uFEFF/, '');
+            if (!nm.value.trim() || !src.trim()) throw new Error('Нужны название и код');
+            if (src.length > 200 * 1024) throw new Error('Больше 200 КБ');
+            const hash = await sha(src);
+            const flags = RISKY.filter(([re]) => re.test(src)).map(([, t]) => t);
+            const slug = nm.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'mod';
+            const fd = new FormData();
+            fd.append('payload_json', JSON.stringify({
+              allowed_mentions: { parse: [] },
+              embeds: [{
+                title: ('Новый мод: ' + nm.value).slice(0, 250), description: ds.value.slice(0, 300), color: flags.length ? 0xe0803a : 0x5ad85a,
+                fields: [
+                  { name: 'Автор', value: (au.value || 'аноним').slice(0, 100), inline: true },
+                  { name: 'Версия', value: (vs.value || '1.0').slice(0, 20), inline: true },
+                  { name: 'Размер', value: Math.round(src.length / 102.4) / 10 + ' КБ', inline: true },
+                  { name: 'SHA-256', value: '`' + hash + '`' },
+                  { name: 'Авто-флаги (не заменяют чтение кода)', value: flags.length ? flags.join(', ') : 'не найдено' }
+                ]
+              }],
+              attachments: [{ id: 0, filename: slug + '.js' }]
+            }));
+            fd.append('files[0]', new Blob([src], { type: 'text/javascript' }), slug + '.js');
+            const r = await fetch(WEBHOOK, { method: 'POST', body: fd });
+            if (!r.ok) throw new Error('Discord: HTTP ' + r.status);
+            LS.set('ewm_lastsub', Date.now()); say('Отправлено на проверку');
+          })];
       }
     };
     let cur = 'Каталог';
@@ -160,6 +191,6 @@
       body.innerHTML = '';
       try { (await TABS[cur]()).forEach(e => body.appendChild(e)); } catch (e) { body.textContent = 'Ошибка: ' + e.message; }
     }
-    console.log('[ModInstaller] serverless loaded — F8');
+    console.log('[ModLoader] loaded — F8');
   }
 })();
