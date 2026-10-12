@@ -11,12 +11,12 @@
     },
     {
       "id": "UnlimitedFPS",
-      "name": "UnlimitedFPS",
-      "version": "1.1",
+      "name": "Unlimited FPS",
+      "version": "1.2",
       "author": "Foxi005305",
-      "desc": "Снимает ограничение FPS (убирает vsync/кап, ставит высокий лимит)",
-      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/c6634e773cd41b2d4c940b0045f52395205c7a40/mods/UnlimitedFPS.js",
-      "hash": "b49e1b904cc5ef972d05cf642fc3dc6b074f2a50fed0aeb193b7042b6ddbef48"
+      "desc": "Снимает ограничение FPS (отключает vsync и кап)",
+      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/beaecd24073b71e00f2a136bcee86d22e6488c27/mods/UnlimitedFPS.js",
+      "hash": "66214d7c7f1c9a69fea93a79ad18e967b6279c2433196196667ef5165fd12646"
     },
     {
       "id": "VoiceChat",
