@@ -1,6 +1,6 @@
 // @name UnlimitedFPS
 // @author Foxi005305
-// @version 1.0
+// @version 1.1
 // @description Снимает ограничение FPS (убирает vsync/кап, ставит высокий лимит)
 if (window.__ewFPS) return;
 window.__ewFPS = 1;
@@ -13,14 +13,15 @@ const save = () => S?.set?.('fpsCfg', cfg);
 function unlock() {
   if (!cfg.enabled) return;
 
-
+  // 1. Через настройки игры
   if (G?.settings) {
     if ('fps' in G.settings) G.settings.fps = cfg.target || 9999;
     if ('maxFps' in G.settings) G.settings.maxFps = cfg.target || 9999;
     if ('vsync' in G.settings) G.settings.vsync = false;
     if ('limitFps' in G.settings) G.settings.limitFps = false;
   }
-  
+
+  // 2. Патч requestAnimationFrame
   if (!window.__origRAF) {
     window.__origRAF = window.requestAnimationFrame;
     window.requestAnimationFrame = function (cb) {
@@ -36,16 +37,12 @@ function unlock() {
     };
   }
 
+  // 3. Патч R.draw
   if (R?.draw && !R.__fpsPatched) {
     R.__fpsPatched = true;
     const origDraw = R.draw;
     R.draw = function () {
-      const r = origDraw.apply(this, arguments);
-     
-      if (cfg.enabled && cfg.target === 0) {
-    
-      }
-      return r;
+      return origDraw.apply(this, arguments);
     };
   }
 
@@ -55,8 +52,9 @@ function unlock() {
 unlock();
 setInterval(unlock, 2000);
 
+// бинд на F9 — вкл/выкл
 addEventListener('keydown', (e) => {
-  if (e.code === 'F8' && !e.repeat && !G?.Input?.typing?.()) {
+  if (e.code === 'F9' && !e.repeat && !G?.Input?.typing?.()) {
     cfg.enabled = !cfg.enabled;
     save();
     unlock();
@@ -64,4 +62,4 @@ addEventListener('keydown', (e) => {
   }
 }, true);
 
-EWMod?.log?.('UnlimitedFPS 1.0 загружен — F8 вкл/выкл');
+EWMod?.log?.('UnlimitedFPS 1.1 загружен — F9 вкл/выкл');
