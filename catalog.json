@@ -1,15 +1,6 @@
 {
   "mods": [
     {
-      "id": "EmberveilCheatMenu",
-      "name": "Emberveil Cheat Menu",
-      "version": "2026-10-10",
-      "author": "Foxi005305",
-      "desc": "Обновленное чит-меню с новым UI, анимациями, языками, новыми предметами, боссами и синхронизацией для серверов!",
-      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModInstaller/0780f11763c98c3426290dad2da97b38dec4f3f0/mods/EmberveilCheatMenu.js",
-      "hash": "343418119f9c58245a08c271cebd21cb7d2574130d29e4655c061a2a2b3bc9b5"
-    },
-    {
       "id": "EmberveilVisuals",
       "name": "EmberveilVisuals",
       "version": "2.0",
