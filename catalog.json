@@ -3,11 +3,11 @@
     {
       "id": "EmberveilVisuals",
       "name": "EmberveilVisuals",
-      "version": "2.0",
+      "version": "2.1",
       "author": "Foxi005305",
-      "desc": "Градиентные ауры и следы, эффекты смерти (луч, молния, лазер), килл-фид с причиной, бинды, новое меню (F7)",
-      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/80c3f3c7c459bd79af78d6c06404400a8d3c7546/mods/EmberveilVisuals.js",
-      "hash": "ec42435be14ec9a5153901f3a8ba04bc62a42a8994f2a7aa084c0b0ae0baa61b"
+      "desc": "Градиентные ауры и следы, эффекты смерти (луч, молния, лазер), килл-фид с причиной, бинды, новое меню (F7) + темы окна, свет за курсором, анимации",
+      "url": "https://raw.githubusercontent.com/Ramos1488/EmberveilModLoader/d4f54881bb71b97a7e42b08ef6dc19b31dc186fd/mods/EmberveilVisuals.js",
+      "hash": "6632022c1db1befa7a7a5bfb29b0caf9f9c02314f251fad4e236680907c7762e"
     },
     {
       "id": "VoiceChat",
