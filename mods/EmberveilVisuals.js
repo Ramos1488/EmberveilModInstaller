@@ -1,22 +1,23 @@
 // @name EmberveilVisuals
 // @author Foxi005305
-// @version 2.0
-// @description Градиентные ауры и следы, эффекты смерти (луч, молния, лазер), килл-фид с причиной, бинды, новое меню (F7)
+// @version 2.1
+// @description Градиентные ауры и следы, эффекты смерти (луч, молния, лазер), килл-фид с причиной, бинды, новое меню (F7) + темы окна, свет за курсором, анимации
 if (window.__ewVis2) return;
 window.__ewVis2 = 1;
 const S = EWMod.store, C = G.Combat, D = G.Data, R = G.R;
-
 /* ---------- конфиг ---------- */
 const DEF = {
   b: 100, c: 100, s: 100, h: 0, sep: 0, gray: 0, tint: '#ff7a1a', tintA: 0, bloom: true, bright: false, zoom: 0, shot: false,
   cmode: 'grad', ca: '#ff7a1a', cb: '#ffd84a', speed: 1, aura: 'off', lastAura: 'orbit', auraSize: 1, trail: 'off',
   dfx: true, dtype: 'auto', onlyBoss: false, dsize: 1, ddur: 1, dca: '#ff7a1a', dcb: '#ffe08a', feed: true, feedMs: 5,
+  wBg: '#000000', wOp: 97, wAcc: '#f26a14', wBd: '#1f1f1f', wRad: 16, wBlur: 0, wFont: 100, wShadow: true,
+  wGlow: true, wCardGlow: true, wGlowCol: '#ffffff', wGlowSize: 260, wGlowStr: 12,
+  wAnim: 'scale', wDur: 260, wTabAnim: true, wPulse: false, wCss: '',
   binds: { menu: 'F7', shot: 'KeyH', aura: 'Numpad1', dfx: 'Numpad2', bright: 'Numpad3', preset: 'Numpad4' }
 };
 const cfg = Object.assign({}, DEF, S.get('cfg2', {}));
 cfg.binds = Object.assign({}, DEF.binds, cfg.binds || {});
 const save = () => S.set('cfg2', cfg);
-
 /* ---------- цвета ---------- */
 const rgb = (h) => { h = String(h).replace('#', ''); const n = parseInt(h, 16) || 0; return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
 const toHex = (a) => '#' + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
@@ -27,7 +28,6 @@ const pc = (h) => toHex(rgb(h).map(v => Math.min(255, Math.round(v / 17) * 17)))
 const aurCol = (ph) => { const t = performance.now() / 1000; return cfg.cmode === 'rainbow' ? hsl((t * 60 * cfg.speed + ph * 360) % 360) : mix(cfg.ca, cfg.cb, 0.5 + 0.5 * Math.sin(t * 2 * cfg.speed + ph * 6.283)); };
 const dCol = (t) => cfg.cmode === 'rainbow' ? hsl(t * 300) : mix(cfg.dca, cfg.dcb, t);
 const seeded = (s) => { s = Math.floor(s) % 2147483646 + 1; return () => { s = s * 16807 % 2147483647; return (s - 1) / 2147483646; }; };
-
 /* ---------- применение настроек ---------- */
 const PRESETS = { 'Обычный': [100, 100, 100, 0, 0, 0], 'Тёплый': [105, 105, 115, -12, 15, 0], 'Холодный': [100, 105, 100, 25, 0, 0], 'Ч/Б': [100, 110, 0, 0, 0, 100], 'Ретро': [100, 95, 80, 0, 45, 0], 'Неон': [110, 125, 180, 0, 0, 0] };
 const presetNames = Object.keys(PRESETS);
@@ -46,7 +46,6 @@ function applyShot() {
 function setPreset(n) { [cfg.b, cfg.c, cfg.s, cfg.h, cfg.sep, cfg.gray] = PRESETS[n]; save(); apply(); }
 const dl = G.Sys.daylight;
 G.Sys.daylight = function () { return (cfg.bright && G.game && !G.game.map.dungeon) ? 1 : dl.apply(this, arguments); };
-
 /* ---------- причина смерти ---------- */
 const CAUSE = { melee: 'ударом', ranged: 'выстрелом', fire: 'огнём', magic: 'магией', blast: 'взрывом', comp: 'спутником', burn: 'горением', other: 'уроном' };
 const SK = { power_strike: 'melee', whirlwind: 'melee', piercing_shot: 'ranged', volley: 'ranged', fireball: 'fire', frost_nova: 'magic', heal: 'magic' };
@@ -81,7 +80,6 @@ C.die = function (e) {
   if (info && e.dead) onKill(info);
   return r;
 };
-
 /* ---------- килл-фид ---------- */
 const mk = (t, txt, css) => { const e = document.createElement(t); if (txt) e.textContent = txt; if (css) e.style.cssText = css; return e; };
 const feed = mk('div', '', 'position:fixed;right:12px;top:210px;z-index:99980;display:flex;flex-direction:column;gap:5px;align-items:flex-end;pointer-events:none');
@@ -97,7 +95,6 @@ function addFeed(i) {
   while (feed.children.length > 5) feed.firstChild.remove();
   setTimeout(() => { el.style.opacity = 0; setTimeout(() => el.remove(), 450); }, cfg.feedMs * 1000);
 }
-
 /* ---------- эффекты смерти ---------- */
 const fx = [], AUTO = { melee: 'beam', ranged: 'laser', fire: 'nova', magic: 'lightning', blast: 'nova', comp: 'soul', burn: 'soul', other: 'beam' };
 function onKill(i) {
@@ -145,7 +142,6 @@ function drawFx(ctx, f, age, ox, oy) {
     }
   }
 }
-
 /* ---------- аура, след ---------- */
 const trail = [];
 function drawAura(ctx, p, sx, sy, t) {
@@ -205,7 +201,6 @@ setInterval(() => {
   if (cfg.trail === 'sparks' && p.moving) for (let i = 0; i < 2; i++) R.particle(p.x, p.y - 2, (Math.random() - 0.5) * 40, -10 - Math.random() * 20, 0.35, pc(aurCol(Math.random())), 1, { k: 'glow' });
   if (cfg.aura === 'flame' && !p.deadT) for (let i = 0; i < 2; i++) R.particle(p.x + (Math.random() - 0.5) * 8, p.y - 2 - Math.random() * 6, (Math.random() - 0.5) * 6, -14 - Math.random() * 16, 0.7, pc(aurCol(Math.random())), 1, { k: 'glow' });
 }, 60);
-
 /* ---------- бинды ---------- */
 const ACT = {
   menu: ['Открыть меню', () => toggleMenu()],
@@ -226,20 +221,33 @@ addEventListener('keydown', (e) => {
   if (e.repeat || G.Input.typing()) return;
   for (const id in ACT) if (cfg.binds[id] && cfg.binds[id] === e.code) { e.preventDefault(); ACT[id][1](); break; }
 }, true);
-
 /* ---------- меню ---------- */
 const css = document.createElement('style');
-css.textContent = `#ewv2{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(780px,96vw);height:min(470px,88vh);z-index:99990;display:none;background:#0e0f13;border:1px solid #23252d;border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,.85);font:13px 'Segoe UI',Arial,sans-serif;color:#cfd0d6;overflow:hidden}
-#ewv2 .side{width:150px;flex:none;background:#0b0c0f;border-right:1px solid #1b1d23;padding:12px 10px;display:flex;flex-direction:column;gap:4px}
-#ewv2 .nav{padding:9px 12px;border-radius:10px;cursor:pointer;color:#9a9ca6}
-#ewv2 .nav:hover{background:#17181e;color:#fff}#ewv2 .nav.on{background:linear-gradient(180deg,#ff8a2a,#e05a0a);color:#fff}
+css.textContent = `#ewv2{position:fixed;inset:0;margin:auto;width:min(780px,96vw);height:min(470px,88vh);z-index:99990;display:none;background:rgba(var(--bgc,0,0,0),var(--op,.97));backdrop-filter:blur(var(--blur,0px));-webkit-backdrop-filter:blur(var(--blur,0px));border:1px solid var(--bd,#1f1f1f);border-radius:var(--rad,16px);box-shadow:var(--sh,0 20px 70px rgba(0,0,0,.85));font:calc(13px*var(--fs,1)) 'Segoe UI',Arial,sans-serif;color:#cfd0d6;overflow:hidden}
+#ewv2::before{content:'';position:absolute;inset:0;z-index:50;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .3s;background:radial-gradient(circle var(--gs,260px) at var(--mx,50%) var(--my,50%),rgba(var(--gc,255,255,255),var(--ga,.12)),transparent 70%)}
+#ewv2:hover::before{opacity:1}
+#ewv2.noglow::before,#ewv2.nocg .card::before,#ewv2.nocg .card::after{display:none}
+#ewv2.pulse::after{content:'';position:absolute;inset:0;z-index:49;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(var(--ac),.8),inset 0 0 24px rgba(var(--ac),.3);animation:ewv-pulse 3s ease-in-out infinite}
+#ewv2 .side{width:150px;flex:none;background:rgba(0,0,0,.35);border-right:1px solid rgba(255,255,255,.06);padding:12px 10px;display:flex;flex-direction:column;gap:4px}
+#ewv2 .nav{padding:9px 12px;border-radius:10px;cursor:pointer;color:#9a9ca6;transition:background .2s,color .2s}
+#ewv2 .nav:hover{background:rgba(255,255,255,.06);color:#fff}#ewv2 .nav.on{background:linear-gradient(180deg,var(--acc,#f26a14),var(--acc2,#b04a0a));color:#fff}
 #ewv2 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;overflow:auto;align-content:start}
-#ewv2 .card{background:#15171c;border:1px solid #1f2128;border-radius:10px;padding:10px 12px}
-#ewv2 select,#ewv2 textarea,#ewv2 .b{background:#0e0f13;color:#e6e6ea;border:1px solid #2a2c35;border-radius:6px;padding:4px 8px;font:inherit}
-#ewv2 .b{cursor:pointer}#ewv2 .b:hover{border-color:#f26a14;color:#fff}
-#ewv2 input[type=range]{accent-color:#f26a14;width:100%;margin:6px 0 0}
+#ewv2 .card{position:relative;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:calc(var(--rad,16px)*.65);padding:10px 12px;overflow:hidden}
+#ewv2 .card::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;opacity:0;transition:opacity .25s;background:radial-gradient(130px circle at var(--cx,50%) var(--cy,50%),rgba(var(--gc,255,255,255),.9),transparent 70%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+#ewv2 .card::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;background:radial-gradient(180px circle at var(--cx,50%) var(--cy,50%),rgba(var(--gc,255,255,255),.07),transparent 70%)}
+#ewv2 .card:hover::before,#ewv2 .card:hover::after{opacity:1}
+#ewv2 .card.in{animation:ewv-tab .28s ease both}
+#ewv2 select,#ewv2 textarea,#ewv2 .b{background:rgba(0,0,0,.6);color:#e6e6ea;border:1px solid #2a2c35;border-radius:6px;padding:4px 8px;font:inherit}
+#ewv2 .b{cursor:pointer}#ewv2 .b:hover{border-color:var(--acc,#f26a14);color:#fff}
+#ewv2 input[type=range]{accent-color:var(--acc,#f26a14);width:100%;margin:6px 0 0}
 #ewv2 input[type=color]{width:34px;height:22px;border:none;background:none;padding:0;cursor:pointer}
-#ewv2 ::-webkit-scrollbar{width:6px}#ewv2 ::-webkit-scrollbar-thumb{background:#f26a14;border-radius:3px}
+#ewv2 ::-webkit-scrollbar{width:6px}#ewv2 ::-webkit-scrollbar-thumb{background:var(--acc,#f26a14);border-radius:3px}
+@keyframes ewv-scale{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@keyframes ewv-fade{from{opacity:0}to{opacity:1}}
+@keyframes ewv-slide{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+@keyframes ewv-flip{from{opacity:0;transform:perspective(900px) rotateX(-18deg) translateY(20px)}to{opacity:1;transform:none}}
+@keyframes ewv-tab{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes ewv-pulse{0%,100%{opacity:.25}50%{opacity:1}}
 @media(max-width:620px){#ewv2 .grid{grid-template-columns:1fr}#ewv2 .side{width:96px}}`;
 document.head.appendChild(css);
 const root = mk('div'); root.id = 'ewv2';
@@ -252,8 +260,60 @@ hdr.append(mk('b', 'Emberveil Visuals', 'color:#fff;font-size:15px'), search, cl
 const grid = mk('div'); grid.className = 'grid';
 main.append(hdr, grid); root.style.flexDirection = 'row';
 const logo = mk('div', '', 'display:flex;align-items:center;gap:8px;margin-bottom:10px');
-logo.append(mk('div', 'EV', 'background:linear-gradient(180deg,#ff8a2a,#e05a0a);color:#fff;font-weight:bold;border-radius:8px;padding:5px 7px;font-size:12px'), mk('b', 'Visuals', 'color:#fff'));
+logo.append(mk('div', 'EV', 'background:linear-gradient(180deg,var(--acc),var(--acc2));color:#fff;font-weight:bold;border-radius:8px;padding:5px 7px;font-size:12px'), mk('b', 'Visuals', 'color:#fff'));
 side.append(logo); root.append(side, main); document.body.appendChild(root);
+
+const ctag = mk('style'); document.head.appendChild(ctag);
+const WT = {
+  'Чёрный': { wBg: '#000000', wOp: 97, wBd: '#1f1f1f', wBlur: 0, wAcc: '#f26a14' },
+  'Графит': { wBg: '#14161b', wOp: 97, wBd: '#262a33', wBlur: 0, wAcc: '#f26a14' },
+  'Стекло': { wBg: '#0a0a0f', wOp: 55, wBd: '#3a3a48', wBlur: 14, wAcc: '#7aa8ff' },
+  'Пурпур': { wBg: '#07040d', wOp: 96, wBd: '#2a1b44', wBlur: 0, wAcc: '#a45bff' },
+  'Изумруд': { wBg: '#030a07', wOp: 96, wBd: '#143326', wBlur: 0, wAcc: '#2fd07f' }
+};
+function applyTheme() {
+  const s = root.style;
+  s.setProperty('--bgc', rgb(cfg.wBg).join(',')); s.setProperty('--op', cfg.wOp / 100); s.setProperty('--blur', cfg.wBlur + 'px');
+  s.setProperty('--bd', cfg.wBd); s.setProperty('--rad', cfg.wRad + 'px'); s.setProperty('--fs', cfg.wFont / 100);
+  s.setProperty('--acc', cfg.wAcc); s.setProperty('--acc2', mix(cfg.wAcc, '#000000', 0.3)); s.setProperty('--ac', rgb(cfg.wAcc).join(','));
+  s.setProperty('--gc', rgb(cfg.wGlowCol).join(',')); s.setProperty('--gs', cfg.wGlowSize + 'px'); s.setProperty('--ga', cfg.wGlowStr / 100);
+  s.setProperty('--sh', cfg.wShadow ? '0 20px 70px rgba(0,0,0,.85)' : 'none');
+  root.classList.toggle('noglow', !cfg.wGlow); root.classList.toggle('nocg', !cfg.wCardGlow); root.classList.toggle('pulse', cfg.wPulse);
+  ctag.textContent = cfg.wCss;
+}
+const apply0 = apply; apply = function () { apply0(); applyTheme(); };
+applyTheme();
+/* свет за курсором с плавным запаздыванием */
+let tx = 0, ty = 0, sx = 0, sy = 0, glowRun = false;
+function glowTick() {
+  sx += (tx - sx) * 0.22; sy += (ty - sy) * 0.22;
+  const r = root.getBoundingClientRect();
+  root.style.setProperty('--mx', (sx - r.left) + 'px'); root.style.setProperty('--my', (sy - r.top) + 'px');
+  if (cfg.wCardGlow) for (const c of grid.children) { const k = c.getBoundingClientRect(); c.style.setProperty('--cx', (sx - k.left) + 'px'); c.style.setProperty('--cy', (sy - k.top) + 'px'); }
+  if (Math.abs(tx - sx) > 0.4 || Math.abs(ty - sy) > 0.4) requestAnimationFrame(glowTick); else glowRun = false;
+}
+root.addEventListener('mouseenter', (e) => { sx = tx = e.clientX; sy = ty = e.clientY; });
+root.addEventListener('mousemove', (e) => {
+  if (!cfg.wGlow && !cfg.wCardGlow) return;
+  tx = e.clientX; ty = e.clientY;
+  if (!glowRun) { glowRun = true; requestAnimationFrame(glowTick); }
+});
+/* анимация открытия/закрытия */
+let hideT = 0;
+function toggleMenu() {
+  const open = root.style.display === 'flex', an = cfg.wAnim, d = cfg.wDur;
+  clearTimeout(hideT);
+  if (!open) {
+    root.style.display = 'flex'; render(true);
+    root.style.animation = 'none'; void root.offsetWidth;
+    if (an !== 'none') root.style.animation = `ewv-${an} ${d}ms cubic-bezier(.2,.8,.2,1) both`;
+  } else if (an === 'none') root.style.display = 'none';
+  else {
+    root.style.animation = 'none'; void root.offsetWidth;
+    root.style.animation = `ewv-${an} ${Math.round(d * 0.8)}ms ease both reverse`;
+    hideT = setTimeout(() => { root.style.display = 'none'; root.style.animation = ''; }, d * 0.8);
+  }
+}
 
 const SEL = {
   aura: [['off', 'Нет'], ['orbit', 'Орбита'], ['ring', 'Кольцо'], ['spiral', 'Спираль'], ['flame', 'Пламя']],
@@ -282,20 +342,33 @@ const TABS = {
     { t: 'check', k: 'feed', l: 'Килл-фид', d: 'Полоса «убит ударом / молнией / огнём…»' }, rg('feedMs', 'Время показа фида, с', 2, 12, 1, () => { }),
     { t: 'btn', b: 'Тест эффекта', l: 'Проверка', run: () => { const p = G.game.player; onKill({ x: p.x + 50, y: p.y, name: 'Тестовый враг', lvl: 5, boss: false, c: { k: 'magic', skill: 'Тест' } }); } }],
   '⌨ Бинды': Object.keys(ACT).map(id => ({ t: 'bind', id, l: ACT[id][0] })),
+  '🪟 Окно': [
+    { t: 'wpreset', l: 'Тема окна', d: 'Готовые оформления' },
+    { t: 'color', k: 'wBg', l: 'Цвет фона', fn: applyTheme }, rg('wOp', 'Непрозрачность фона, %', 20, 100, 1, applyTheme), rg('wBlur', 'Размытие стекла, px', 0, 30, 1, applyTheme),
+    { t: 'color', k: 'wAcc', l: 'Акцентный цвет', fn: applyTheme }, { t: 'color', k: 'wBd', l: 'Цвет рамки', fn: applyTheme },
+    rg('wRad', 'Скругление, px', 0, 32, 1, applyTheme), rg('wFont', 'Размер текста, %', 80, 130, 5, applyTheme),
+    { t: 'check', k: 'wShadow', l: 'Тень окна', fn: applyTheme },
+    { t: 'check', k: 'wGlow', l: 'Свет за курсором (окно)', d: 'Белое свечение следует за курсором', fn: applyTheme },
+    { t: 'check', k: 'wCardGlow', l: 'Подсветка карточек', d: 'Светящаяся рамка у карточки под курсором', fn: applyTheme },
+    { t: 'color', k: 'wGlowCol', l: 'Цвет света', fn: applyTheme }, rg('wGlowSize', 'Размер света, px', 80, 600, 10, applyTheme), rg('wGlowStr', 'Яркость света, %', 2, 40, 1, applyTheme),
+    { t: 'select', k: 'wAnim', l: 'Анимация окна', o: [['scale', 'Увеличение'], ['fade', 'Появление'], ['slide', 'Снизу'], ['flip', 'Переворот'], ['none', 'Без анимации']] },
+    rg('wDur', 'Длительность, мс', 100, 800, 20, () => { }),
+    { t: 'check', k: 'wTabAnim', l: 'Анимация вкладок и карточек' },
+    { t: 'check', k: 'wPulse', l: 'Пульсирующая рамка', fn: applyTheme },
+    { t: 'css', l: 'Свой CSS' }],
   '⚙ Конфиг': [
     { t: 'btn', b: 'Копировать конфиг', l: 'Экспорт', run: () => navigator.clipboard.writeText(JSON.stringify(cfg)) },
     { t: 'area', l: 'Импорт конфига' },
     { t: 'btn', b: 'Сбросить всё', l: 'Сброс', run: () => { Object.assign(cfg, JSON.parse(JSON.stringify(DEF))); save(); apply(); applyZoom(); applyShot(); render(); } }]
 };
 let cur = '🎨 Визуалы';
-for (const n in TABS) { const b = mk('div', n); b.className = 'nav'; b.onclick = () => { cur = n; search.value = ''; render(); }; side.append(b); }
-
+for (const n in TABS) { const b = mk('div', n); b.className = 'nav'; b.onclick = () => { cur = n; search.value = ''; render(true); }; side.append(b); }
 function control(s) {
   const k = s.k;
   if (s.t === 'check') {
     const sw = mk('div', '', 'width:34px;height:18px;border-radius:9px;position:relative;cursor:pointer;flex:none;transition:background .15s');
     const kn = mk('div', '', 'position:absolute;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s'); sw.append(kn);
-    const paint = () => { sw.style.background = cfg[k] ? '#f26a14' : '#2a2c35'; kn.style.left = cfg[k] ? '18px' : '2px'; };
+    const paint = () => { sw.style.background = cfg[k] ? 'var(--acc)' : '#2a2c35'; kn.style.left = cfg[k] ? '18px' : '2px'; };
     paint(); sw.onclick = () => { cfg[k] = !cfg[k]; save(); paint(); if (s.fn) s.fn(); }; return sw;
   }
   if (s.t === 'select') {
@@ -305,6 +378,10 @@ function control(s) {
   if (s.t === 'preset') {
     const el = mk('select'); el.add(new Option('—', '')); for (const n of presetNames) el.add(new Option(n, n));
     el.onchange = () => { if (el.value) { setPreset(el.value); render(); } }; return el;
+  }
+  if (s.t === 'wpreset') {
+    const el = mk('select'); el.add(new Option('—', '')); for (const n in WT) el.add(new Option(n, n));
+    el.onchange = () => { if (el.value) { Object.assign(cfg, WT[el.value]); save(); applyTheme(); render(); } }; return el;
   }
   if (s.t === 'color') { const el = mk('input'); el.type = 'color'; el.value = cfg[k]; el.oninput = () => { cfg[k] = el.value; save(); if (s.fn) s.fn(); }; return el; }
   if (s.t === 'btn') { const el = mk('button', s.b); el.className = 'b'; el.onclick = () => { try { s.run(); } catch (e) { console.error(e); } }; return el; }
@@ -316,6 +393,13 @@ function control(s) {
 }
 function row(s) {
   const card = mk('div'); card.className = 'card';
+  if (s.t === 'css') {
+    card.style.gridColumn = '1/-1';
+    const ta = mk('textarea'); ta.style.cssText = 'width:100%;height:90px;margin-top:6px;box-sizing:border-box;font:11px monospace'; ta.value = cfg.wCss; ta.placeholder = '#ewv2{border-radius:4px!important}';
+    const b = mk('button', 'Применить'); b.className = 'b'; b.style.marginTop = '6px';
+    b.onclick = () => { cfg.wCss = ta.value; save(); applyTheme(); };
+    card.append(mk('b', s.l, 'color:#f0e8d8'), mk('div', 'Селекторы начинайте с #ewv2. Чтобы переопределить цвета (--acc, --bgc), добавляйте !important', 'color:#80838d;font-size:11px;margin-top:4px'), ta, b); return card;
+  }
   if (s.t === 'area') {
     card.style.gridColumn = '1/-1';
     const ta = mk('textarea'); ta.style.cssText = 'width:100%;height:70px;margin-top:6px;box-sizing:border-box;font:11px monospace'; ta.placeholder = 'Вставьте JSON-конфиг и нажмите «Импорт»';
@@ -330,7 +414,7 @@ function row(s) {
     card.append(mk('b', s.l, 'color:#f0e8d8'), ta, b); return card;
   }
   const top = mk('div', '', 'display:flex;justify-content:space-between;align-items:center;gap:8px');
-  const lab = mk('b', s.l, 'color:#f0e8d8;font-weight:600'), out = mk('span', '', 'color:#f26a14;margin-left:6px');
+  const lab = mk('b', s.l, 'color:#f0e8d8;font-weight:600'), out = mk('span', '', 'color:var(--acc);margin-left:6px');
   lab.append(out);
   if (s.t === 'range') {
     out.textContent = cfg[s.k]; top.append(lab); card.append(top);
@@ -341,22 +425,30 @@ function row(s) {
   if (s.d) card.append(mk('div', s.d, 'color:#80838d;font-size:11px;margin-top:4px'));
   return card;
 }
-function render() {
+function render(anim) {
   const q = search.value.trim().toLowerCase();
   for (const n of side.querySelectorAll('.nav')) n.classList.toggle('on', !q && n.textContent === cur);
   grid.textContent = '';
   const list = q ? Object.values(TABS).flat().filter(s => (s.l + ' ' + (s.d || '')).toLowerCase().includes(q)) : TABS[cur];
   if (!list.length) grid.append(mk('div', 'Ничего не найдено', 'color:#80838d'));
-  for (const s of list) grid.append(row(s));
+  let i = 0; for (const s of list) {
+    const c = row(s);
+    if (anim && cfg.wTabAnim) { c.classList.add('in'); c.style.animationDelay = (i++ * 28) + 'ms'; }
+    grid.append(c);
+  }
 }
 search.oninput = render;
-function toggleMenu() { root.style.display = root.style.display === 'flex' ? 'none' : 'flex'; if (root.style.display === 'flex') render(); }
 (() => {
   let dx, dy, drag = false;
-  hdr.onmousedown = (e) => { if (e.target === search) return; const r = root.getBoundingClientRect(); root.style.transform = 'none'; root.style.left = r.left + 'px'; root.style.top = r.top + 'px'; dx = e.clientX - r.left; dy = e.clientY - r.top; drag = true; };
+  hdr.onmousedown = (e) => {
+    if (e.target === search) return;
+    const r = root.getBoundingClientRect();
+    root.style.inset = 'auto'; root.style.margin = '0';
+    root.style.left = r.left + 'px'; root.style.top = r.top + 'px';
+    dx = e.clientX - r.left; dy = e.clientY - r.top; drag = true;
+  };
   addEventListener('mousemove', (e) => { if (drag) { root.style.left = (e.clientX - dx) + 'px'; root.style.top = (e.clientY - dy) + 'px'; } });
   addEventListener('mouseup', () => { drag = false; });
 })();
-
 const wait = setInterval(() => { if (R.cv) { clearInterval(wait); apply(); if (cfg.zoom) applyZoom(); applyShot(); } }, 300);
-EWMod.log('Visuals 2.0 загружен — F7');
+EWMod.log('Visuals 2.1 загружен — F7');
